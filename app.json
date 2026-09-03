@@ -8,7 +8,10 @@
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.dhruv.homekitchen"
+      "bundleIdentifier": "com.dhruv.homekitchen",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -33,6 +36,18 @@
     "scheme": "homekitchen",
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "41be0b4d-2bdf-4eb9-ab68-f6192f1c8eb0"
+      }
+    },
+    "owner": "dhruv7393",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/41be0b4d-2bdf-4eb9-ab68-f6192f1c8eb0"
     }
   }
 }
