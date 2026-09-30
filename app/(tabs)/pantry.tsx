@@ -28,7 +28,9 @@ export default function PantryScreen() {
   const pantry = (ings.data ?? []).filter((i) => i.kind === 'pantry');
   const lowCount = pantry.filter((i) => i.isLow).length;
   // dated items first, soonest first, then the rest grouped by aisle
-  const filtered = pantry.filter((i) => filter === 'all' || i.isLow);
+  const [aisle, setAisle] = useState<Form | null>(null);
+  const aisles = FORMS.filter((f) => pantry.some((i) => i.form === f));
+  const filtered = pantry.filter((i) => (filter === 'all' || i.isLow) && (!aisle || i.form === aisle));
   const dated = filtered.filter((i) => i.expiresOn).sort(byExpiryThenName);
   const undated = filtered.filter((i) => !i.expiresOn).sort((a, b) => FORMS.indexOf(a.form) - FORMS.indexOf(b.form) || a.name.localeCompare(b.name));
   const rows = [...dated, ...undated];
@@ -47,6 +49,11 @@ export default function PantryScreen() {
         <Pill label="Everything" on={filter === 'all'} onPress={() => setFilter('all')} />
         <Pill label="Running low" on={filter === 'low'} onPress={() => setFilter('low')} />
       </View>
+      {aisles.length > 1 && (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: 8, paddingHorizontal: 18, paddingTop: 8, paddingBottom: 2 }}>
+          {aisles.map((f) => <Pill key={f} label={f} on={aisle === f} onPress={() => setAisle(aisle === f ? null : f)} />)}
+        </ScrollView>
+      )}
       <ScrollView style={{ flex: 1 }}>
         {ings.isLoading && <Body color={C.faint} style={{ padding: 24 }}>Loading…</Body>}
         {rows.map((i) => {
@@ -101,7 +108,7 @@ function DatePick({ title, initial, onClose, onPick }: { title: string; initial?
 }
 
 function AddPantry({ stores, onClose, onSaved }: { stores: Array<{ id: string; name: string; color: string }>; onClose: () => void; onSaved: () => void }) {
-  const [name, setName] = useState(''); const [storeId, setStoreId] = useState(stores[0]?.id ?? ''); const [form, setForm] = useState<Form>('Dry Goods');
+  const [name, setName] = useState(''); const [storeId, setStoreId] = useState(stores[0]?.id ?? ''); const [form, setForm] = useState<Form>('Grains');
   const [expiresOn, setExpiresOn] = useState<string | null>(null); const [picking, setPicking] = useState(false);
   const [error, setError] = useState<string | null>(null); const [busy, setBusy] = useState(false);
   async function save() {
