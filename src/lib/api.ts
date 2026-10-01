@@ -1,4 +1,4 @@
-import type { BridgeEstimate, Ingredient, Needed, NeedsBridge, Recipe, Settings, ShoppingList, Store, Today, Week, Unit } from './types';
+import type { BridgeEstimate, ChatTurn, Ingredient, Needed, NeedsBridge, Recipe, Settings, ShoppingList, Store, Today, Week, Unit } from './types';
 
 const BASE = (process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000').replace(/\/$/, '');
 
@@ -6,8 +6,15 @@ export class ApiError extends Error {
   constructor(public readonly status: number, message: string, public readonly details?: unknown) { super(message); this.name = 'ApiError'; }
 }
 
-async function http<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const r = await fetch(BASE + path, { ...init, headers: { 'content-type': 'application/json', ...(init.headers ?? {}) } });
+async function http<T>(path: string, init: RequestInit & { timeoutMs?: number } = {}): Promise<T> {
+  const { timeoutMs, ...rest } = init;
+  // AbortController rather than AbortSignal.timeout, which Hermes does not have.
+  const ctrl = timeoutMs ? new AbortController() : undefined;
+  const timer = ctrl ? setTimeout(() => ctrl.abort(), timeoutMs) : undefined;
+  let r: Response;
+  try { r = await fetch(BASE + path, { ...rest, signal: ctrl?.signal, headers: { 'content-type': 'application/json', ...(rest.headers ?? {}) } }); }
+  catch (e) { if (ctrl?.signal.aborted) throw new ApiError(0, 'That took too long — the model may be busy. Try again.'); throw e; }
+  finally { clearTimeout(timer); }
   if (r.status === 204) return undefined as T;
   const body = await r.json().catch(() => ({}));
   if (!r.ok) throw new ApiError(r.status, (body as { error?: string }).error ?? `request failed (${r.status})`, (body as { details?: unknown }).details);
@@ -67,7 +74,10 @@ export const api = {
     removeManual: (listId: string, ingredientId: string) => http<ShoppingList>(`/api/lists/${listId}/items/${ingredientId}`, { method: 'DELETE' }),
   },
   today: (date: string) => http<Today>(`/api/today?date=${date}`),
-  ai: { bridges: (ingredientIds?: string[]) => http<{ estimates: BridgeEstimate[]; model: string }>('/api/ai/bridges', { method: 'POST', body: j(ingredientIds ? { ingredientIds } : {}) }) },
+  ai: {
+    chat: (messages: ChatTurn[]) => http<{ reply: string; model: string }>('/api/ai/chat', { method: 'POST', body: j({ messages }), timeoutMs: 45_000 }),
+    bridges: (ingredientIds?: string[]) => http<{ estimates: BridgeEstimate[]; model: string }>('/api/ai/bridges', { method: 'POST', body: j(ingredientIds ? { ingredientIds } : {}) }),
+  },
 };
 
 export function errorMessage(e: unknown): string {

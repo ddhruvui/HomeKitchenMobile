@@ -13,3 +13,11 @@ describe('api client on the phone', () => {
     expect(init.method).toBe('PATCH'); expect(JSON.parse(init.body)).toEqual({ checked: true });
   });
 });
+describe('asking about a dish', () => {
+  it('posts the whole thread to /api/ai/chat', async () => {
+    mockFetch(200, { reply: 'Potatoes.', model: 'm' });
+    expect(await api.ai.chat([{ role: 'user', text: 'What do I need?' }])).toEqual({ reply: 'Potatoes.', model: 'm' });
+    const [url, init] = (globalThis.fetch as jest.Mock).mock.calls[0];
+    expect(url).toMatch(/\/api\/ai\/chat$/); expect(JSON.parse(init.body)).toEqual({ messages: [{ role: 'user', text: 'What do I need?' }] });
+  });
+});

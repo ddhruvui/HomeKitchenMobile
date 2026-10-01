@@ -48,3 +48,4 @@ export interface Today {
 
 export interface NeedsBridge { ingredient: Ingredient; needs: Array<'ozPerCup' | 'ozPerCount'>; units: Unit[]; }
 export interface BridgeEstimate { id: string; name?: string; ozPerCup?: number; ozPerCount?: number; rationale: string; }
+export interface ChatTurn { role: 'user' | 'model'; text: string }

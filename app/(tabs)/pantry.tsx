@@ -1,14 +1,14 @@
 import { useMemo, useState } from 'react';
-import { Alert, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useQueryClient } from '@tanstack/react-query';
-import { Body, Eyebrow, Mono, Pill, Section, Serif } from '@/components/ui';
+import { Body, Mono, Pill, Section, Serif } from '@/components/ui';
+import { DatePick } from '@/components/DatePick';
 import { api, errorMessage } from '@/lib/api';
 import { keys, useIngredients, useSetExpiry, useSetLow, useStores } from '@/lib/hooks';
 import { C, F } from '@/lib/theme';
-import { byExpiryThenName, expiryLabel, expiryStatus, toDateStr, toLocalDate, shortDate } from '@/lib/dates';
+import { byExpiryThenName, expiryLabel, expiryStatus, shortDate } from '@/lib/dates';
 import { FORMS, type Form, type Ingredient } from '@/lib/types';
 
 export default function PantryScreen() {
@@ -86,27 +86,6 @@ export default function PantryScreen() {
   );
 }
 
-/** One picker for both platforms: iOS gets an inline calendar in a sheet with Done, Android its native dialog. */
-function DatePick({ title, initial, onClose, onPick }: { title: string; initial?: string; onClose: () => void; onPick: (d: string) => void }) {
-  const [value, setValue] = useState<Date>(initial ? toLocalDate(initial) : new Date());
-  if (Platform.OS === 'android') {
-    return <DateTimePicker value={value} mode="date" onChange={(e: DateTimePickerEvent, d?: Date) => { if (e.type === 'set' && d) onPick(toDateStr(d)); else onClose(); }} />;
-  }
-  return (
-    <Modal transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable style={{ flex: 1, backgroundColor: 'rgba(42,36,32,0.28)' }} onPress={onClose} />
-      <View style={s.sheet}>
-        <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 10 }}><Serif size={20} style={{ fontFamily: F.serifBold, flex: 1 }}>{title}</Serif><Body size={12.5} color={C.muted}>expires {shortDate(toDateStr(value))}</Body></View>
-        <DateTimePicker value={value} mode="date" display="inline" accentColor={C.accent} onChange={(_e: DateTimePickerEvent, d?: Date) => { if (d) setValue(d); }} />
-        <View style={{ flexDirection: 'row', gap: 10, justifyContent: 'flex-end' }}>
-          <Pressable onPress={onClose} style={s.btn}><Body size={14} color="#4a423a" style={{ fontFamily: F.sansMed }}>Cancel</Body></Pressable>
-          <Pressable onPress={() => onPick(toDateStr(value))} style={[s.btn, s.btnPrimary]}><Body size={14} color="#fff" style={{ fontFamily: F.sansBold }}>Done</Body></Pressable>
-        </View>
-      </View>
-    </Modal>
-  );
-}
-
 function AddPantry({ stores, onClose, onSaved }: { stores: Array<{ id: string; name: string; color: string }>; onClose: () => void; onSaved: () => void }) {
   const [name, setName] = useState(''); const [storeId, setStoreId] = useState(stores[0]?.id ?? ''); const [form, setForm] = useState<Form>('Grains');
   const [expiresOn, setExpiresOn] = useState<string | null>(null); const [picking, setPicking] = useState(false);
@@ -151,5 +130,4 @@ const s = StyleSheet.create({
   btn: { paddingVertical: 11, paddingHorizontal: 18, borderRadius: 8, borderWidth: 1, borderColor: C.fieldLine, backgroundColor: C.surface },
   btnPrimary: { backgroundColor: C.accent, borderColor: C.accent },
   calBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', marginRight: -10 },
-  sheet: { backgroundColor: C.paper, borderTopLeftRadius: 16, borderTopRightRadius: 16, padding: 20, paddingBottom: 34, gap: 14 },
 });

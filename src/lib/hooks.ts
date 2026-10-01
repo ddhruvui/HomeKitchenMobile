@@ -6,12 +6,13 @@ import { applyCheck, applyExpiry, applyLow, applyPantryLow } from './optimistic'
 import type { Ingredient, ShoppingList } from './types';
 
 export const keys = {
-  settings: ['settings'] as const, stores: ['stores'] as const, ingredients: ['ingredients'] as const,
+  settings: ['settings'] as const, stores: ['stores'] as const, ingredients: ['ingredients'] as const, recipes: ['recipes'] as const,
   list: (d: string) => ['list', d] as const, today: (d: string) => ['today', d] as const,
 };
 export const useSettings = () => useQuery({ queryKey: keys.settings, queryFn: api.settings.get });
 export const useStores = () => useQuery({ queryKey: keys.stores, queryFn: api.stores.list });
 export const useIngredients = () => useQuery({ queryKey: keys.ingredients, queryFn: api.ingredients.list });
+export const useRecipes = () => useQuery({ queryKey: keys.recipes, queryFn: api.recipes.list });
 export const useList = (date: string) => useQuery({ queryKey: keys.list(date), queryFn: () => api.lists.forWeek(date) });
 export const useToday = (date: string) => useQuery({ queryKey: keys.today(date), queryFn: () => api.today(date) });
 
