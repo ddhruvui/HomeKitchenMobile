@@ -37,6 +37,12 @@ export const isUrl = (s: string) => /^https?:\/\/\S+$/i.test(s.trim());
 export function tagsOf(recipes: Recipe[]): string[] {
   return [...new Set(recipes.flatMap((r) => r.tags.map((t) => t.toLowerCase())))].sort();
 }
+/** How many recipes carry each tag, by its lower-cased form; a recipe tagged "Soup" and "soup" counts once. */
+export function tagCounts(recipes: Recipe[]): Record<string, number> {
+  const n: Record<string, number> = {};
+  for (const r of recipes) for (const t of new Set(r.tags.map((x) => x.toLowerCase()))) n[t] = (n[t] ?? 0) + 1;
+  return n;
+}
 export function filterRecipes(recipes: Recipe[], search: string, tag: string | null): Recipe[] {
   const needle = search.trim().toLowerCase();
   return recipes.filter((r) => r.title.toLowerCase().includes(needle) && (!tag || r.tags.some((t) => t.toLowerCase() === tag)));

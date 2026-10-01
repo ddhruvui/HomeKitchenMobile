@@ -5,7 +5,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { Body, Mono, Pill, Serif, inputStyle } from '@/components/ui';
 import { RecipeEditor } from '@/components/RecipeEditor';
 import { useRecipes } from '@/lib/hooks';
-import { filterRecipes, tagsOf } from '@/lib/recipes';
+import { filterRecipes, tagCounts, tagsOf } from '@/lib/recipes';
 import { C, F } from '@/lib/theme';
 import type { Recipe } from '@/lib/types';
 
@@ -17,6 +17,7 @@ export default function RecipesScreen() {
   const [editing, setEditing] = useState<Recipe | 'new' | null>(null);
   const all = recipes.data ?? [];
   const tags = tagsOf(all);
+  const counts = tagCounts(all);
   const shown = filterRecipes(all, search, tag);
 
   return (
@@ -32,7 +33,7 @@ export default function RecipesScreen() {
       </View>
       {tags.length > 0 && (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: 8, paddingHorizontal: 18, paddingTop: 10, paddingBottom: 2 }}>
-          {tags.map((t) => <Pill key={t} label={t} on={tag === t} onPress={() => setTag(tag === t ? null : t)} />)}
+          {tags.map((t) => <Pill key={t} label={t} count={counts[t]} on={tag === t} onPress={() => setTag(tag === t ? null : t)} />)}
         </ScrollView>
       )}
       <ScrollView style={{ flex: 1 }} keyboardShouldPersistTaps="handled">

@@ -2,7 +2,7 @@ import { render, screen, fireEvent } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { api } from '../src/lib/api';
-import { blankDraft, draftFrom, draftToBody, filterRecipes, tagsOf } from '../src/lib/recipes';
+import { blankDraft, draftFrom, draftToBody, filterRecipes, tagCounts, tagsOf } from '../src/lib/recipes';
 import RecipesScreen from '../app/(tabs)/recipes';
 import type { Recipe } from '../src/lib/types';
 
@@ -14,6 +14,9 @@ const book: Recipe[] = [
 
 describe('the recipe list', () => {
   it('collects tags once each, ignoring case', () => { expect(tagsOf(book)).toEqual(['quick', 'soup', 'street food']); });
+  it('counts the recipes under each tag, once per recipe whatever the case', () => {
+    expect(tagCounts([...book, { id: 'r4', title: 'Rasam', ingredients: [], morningSteps: [], steps: [], tags: ['Soup', 'soup'] }])).toEqual({ 'street food': 1, soup: 3, quick: 1 });
+  });
   it('filters by tag and by title together', () => {
     expect(filterRecipes(book, '', 'soup').map((r) => r.id)).toEqual(['r2', 'r3']);
     expect(filterRecipes(book, 'dal', 'soup').map((r) => r.id)).toEqual(['r3']);
@@ -45,7 +48,8 @@ describe('the Recipes tab', () => {
 
   it('a tag pill narrows the list and a second tap clears it', async () => {
     await wrap();
-    const soup = await screen.findByRole('button', { name: 'soup' });
+    const soup = await screen.findByRole('button', { name: 'soup 2' });
+    expect(screen.getByRole('button', { name: 'quick 1' })).toBeTruthy();
     await fireEvent.press(soup);
     expect(screen.getByText('Tomato Soup')).toBeTruthy(); expect(screen.getByText('Dal Shorba')).toBeTruthy();
     expect(screen.queryByText('Pav Bhaji')).toBeNull();
