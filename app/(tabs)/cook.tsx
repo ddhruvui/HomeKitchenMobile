@@ -19,6 +19,17 @@ export default function CookScreen() {
   const t = today.data;
   const toggle = (k: string) => setDone((prev) => { const n = new Set(prev); if (n.has(k)) n.delete(k); else n.add(k); return n; });
 
+  const Steps = ({ label, keyBase, steps }: { label: string; keyBase: string; steps: string[] }) => steps.length === 0 ? null : (
+    <>
+      <Section label={label} style={{ paddingTop: 10, paddingBottom: 4 }} />
+      {steps.map((st, i) => { const k = keyBase + i; const d = done.has(k); return (
+        <Pressable key={i} onPress={() => toggle(k)} style={s.step} accessibilityRole="checkbox" accessibilityState={{ checked: d }}>
+          <View style={[s.num, d && { backgroundColor: C.green }]}>{d ? <Text style={{ color: '#fff', fontSize: 12, fontFamily: F.sansBold }}>✓</Text> : <Mono size={11} color={C.accentInk}>{i + 1}</Mono>}</View>
+          <Body style={[{ flex: 1, lineHeight: 21, paddingTop: 2 }, d && { color: C.dim, textDecorationLine: 'line-through' }]}>{st}</Body>
+        </Pressable>); })}
+    </>
+  );
+
   const Block = ({ slot, label, factor, note, recipes }: { slot: string; label: string; factor: string; note?: string; recipes: ScaledRecipe[] }) => (
     <>
       <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8, paddingHorizontal: 18, paddingTop: 16, paddingBottom: 2 }}><Eyebrow color={C.accentInk}>{label}</Eyebrow><Body size={11.5} color={C.faint} style={{ flex: 1 }}>{factor}</Body></View>
@@ -26,7 +37,7 @@ export default function CookScreen() {
       {recipes.length === 0 && <Body color={C.faint} style={{ paddingHorizontal: 18, paddingVertical: 10, fontFamily: F.serif, fontStyle: 'italic' }}>Nothing planned</Body>}
       {recipes.map((r, ri) => (
         <View key={r.recipeId} style={ri > 0 ? { borderTopWidth: 1, borderTopColor: C.ruleSoft, marginTop: 6 } : undefined}>
-          <View style={{ paddingHorizontal: 18, paddingTop: 14, paddingBottom: 8, gap: 3 }}><Serif size={22}>{r.title}</Serif><Body size={12} color={C.faint}>{r.lines.length} ingredients · {r.steps.length} steps</Body></View>
+          <View style={{ paddingHorizontal: 18, paddingTop: 14, paddingBottom: 8, gap: 3 }}><Serif size={22}>{r.title}</Serif><Body size={12} color={C.faint}>{r.lines.length} ingredients · {r.morningSteps.length + r.steps.length} steps</Body></View>
           <Section label="Ingredients" style={{ paddingTop: 10, paddingBottom: 4 }} />
           {r.lines.map((l, i) => (
             <View key={i} style={s.line}>
@@ -35,12 +46,8 @@ export default function CookScreen() {
               <Text style={{ flex: 1 }}><Serif size={16}>{l.name}</Serif>{l.note ? <Body size={12} color={C.faint}>  {l.note}</Body> : null}</Text>
             </View>
           ))}
-          {r.steps.length > 0 && <Section label="Method" style={{ paddingTop: 10, paddingBottom: 4 }} />}
-          {r.steps.map((st, i) => { const k = `${date}|${slot}|${r.recipeId}|${i}`; const d = done.has(k); return (
-            <Pressable key={i} onPress={() => toggle(k)} style={s.step} accessibilityRole="checkbox" accessibilityState={{ checked: d }}>
-              <View style={[s.num, d && { backgroundColor: C.green }]}>{d ? <Text style={{ color: '#fff', fontSize: 12, fontFamily: F.sansBold }}>✓</Text> : <Mono size={11} color={C.accentInk}>{i + 1}</Mono>}</View>
-              <Body style={[{ flex: 1, lineHeight: 21, paddingTop: 2 }, d && { color: C.dim, textDecorationLine: 'line-through' }]}>{st}</Body>
-            </Pressable>); })}
+          <Steps label="Morning" keyBase={`${date}|${slot}|${r.recipeId}|m`} steps={r.morningSteps} />
+          <Steps label="Evening" keyBase={`${date}|${slot}|${r.recipeId}|`} steps={r.steps} />
         </View>
       ))}
     </>

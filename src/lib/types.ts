@@ -15,7 +15,7 @@ export interface Ingredient {
   expiresOn?: string;
 }
 export interface RecipeLine { ingredientId: string; qty?: number; unit?: Unit; note?: string; }
-export interface Recipe { id: string; title: string; ingredients: RecipeLine[]; steps: string[]; tags: string[]; }
+export interface Recipe { id: string; title: string; ingredients: RecipeLine[]; morningSteps: string[]; steps: string[]; tags: string[]; }
 
 export interface Ref { id: string; title: string | null; }
 export interface WeekDay {
@@ -37,7 +37,7 @@ export interface PantryCheckItem { ingredientId: string; name: string; storeId: 
 export interface ShoppingList { id: string; startDate: string; endDate: string; generatedAt: string; status: string; people: number; items: ShoppingItem[]; problems: Problem[]; pantryCheck: PantryCheckItem[]; }
 
 export interface ScaledLine { ingredientId: string; name: string; qty?: number; unit?: Unit; note?: string; }
-export interface ScaledRecipe { recipeId: string; title: string; factor: number; lines: ScaledLine[]; steps: string[]; }
+export interface ScaledRecipe { recipeId: string; title: string; factor: number; lines: ScaledLine[]; morningSteps: string[]; steps: string[]; }
 // On a fast day (§4 Ekadashi) the dinner pot was cooked the evening before and is eaten at both meals, so the view carries the evenings as well as the dishes.
 export interface Today {
   date: string; people: number; isEkadashi: boolean;
