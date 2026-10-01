@@ -25,11 +25,13 @@ describe('the editor draft', () => {
   it('round-trips a recipe and splits tags only on save', () => {
     const d = draftFrom(book[0]);
     expect(d.tagsText).toBe('street food'); expect(d.morningSteps).toEqual(['']);
-    expect(draftToBody({ ...d, tagsText: 'street food, quick,' })).toEqual({ title: 'Pav Bhaji', tags: ['street food', 'quick'], morningSteps: [], steps: ['Boil.'], ingredients: [{ ingredientId: 'i1', qty: 2, unit: 'cup', note: 'mashed' }] });
+    expect(draftToBody({ ...d, tagsText: 'street food, quick,' })).toEqual({ title: 'Pav Bhaji', tags: ['street food', 'quick'], morningSteps: [], steps: ['Boil.'], sources: [], ingredients: [{ ingredientId: 'i1', qty: 2, unit: 'cup', note: 'mashed' }] });
   });
   it('drops blank steps and unchosen lines, and reads a comma decimal', () => {
     const body = draftToBody({ ...blankDraft(), title: ' Poha ', lines: [{ ingredientId: 'i2', qty: '1,5', unit: '', note: ' ' }, { ingredientId: '', qty: '', unit: '', note: '' }] });
-    expect(body).toEqual({ title: 'Poha', tags: [], morningSteps: [], steps: [], ingredients: [{ ingredientId: 'i2', qty: 1.5 }] });
+    expect(body).toEqual({ title: 'Poha', tags: [], morningSteps: [], steps: [], sources: [], ingredients: [{ ingredientId: 'i2', qty: 1.5 }] });
+    expect(draftToBody({ ...blankDraft(), title: 'Poha', sources: [' https://example.com/poha ', '', "Mom's notebook"] }).sources).toEqual(['https://example.com/poha', "Mom's notebook"]);
+    expect(draftFrom({ id: 'r9', title: 'Old', ingredients: [], morningSteps: [], steps: [], tags: [] }).sources).toEqual([]);
   });
 });
 

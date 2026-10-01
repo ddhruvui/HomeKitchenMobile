@@ -6,14 +6,14 @@ import { UNIT_LABEL } from './format';
 /** A line while it is being edited: quantity is text until it is saved, and the unit may not be chosen yet. */
 export type LineDraft = { ingredientId: string; qty: string; unit: Unit | ''; note: string };
 /** Tags are typed as one comma-separated string and split on save, so a trailing comma survives typing. */
-export interface RecipeDraft { title: string; tagsText: string; lines: LineDraft[]; morningSteps: string[]; steps: string[] }
+export interface RecipeDraft { title: string; tagsText: string; lines: LineDraft[]; morningSteps: string[]; steps: string[]; sources: string[] }
 
-export const blankDraft = (): RecipeDraft => ({ title: '', tagsText: '', lines: [], morningSteps: [''], steps: [''] });
+export const blankDraft = (): RecipeDraft => ({ title: '', tagsText: '', lines: [], morningSteps: [''], steps: [''], sources: [] });
 
 export function draftFrom(r: Recipe): RecipeDraft {
   return {
     title: r.title, tagsText: r.tags.join(', '),
-    morningSteps: r.morningSteps?.length ? r.morningSteps : [''], steps: r.steps.length ? r.steps : [''],
+    morningSteps: r.morningSteps?.length ? r.morningSteps : [''], steps: r.steps.length ? r.steps : [''], sources: r.sources ?? [],
     lines: r.ingredients.map((l) => ({ ingredientId: l.ingredientId, qty: l.qty?.toString() ?? '', unit: l.unit ?? '', note: l.note ?? '' })),
   };
 }
@@ -25,9 +25,13 @@ export function draftToBody(d: RecipeDraft): RecipeInput {
   return {
     title: d.title.trim(), tags: d.tagsText.split(',').map((t) => t.trim()).filter(Boolean),
     morningSteps: d.morningSteps.map((s) => s.trim()).filter(Boolean), steps: d.steps.map((s) => s.trim()).filter(Boolean),
+    sources: d.sources.map((s) => s.trim()).filter(Boolean),
     ingredients: d.lines.filter((l) => l.ingredientId).map((l) => ({ ingredientId: l.ingredientId, ...(l.qty.trim() ? { qty: toNumber(l.qty) } : {}), ...(l.unit ? { unit: l.unit } : {}), ...(l.note.trim() ? { note: l.note.trim() } : {}) })),
   };
 }
+
+/** A source worth opening in the browser, as opposed to a note like "Mom's notebook". */
+export const isUrl = (s: string) => /^https?:\/\/\S+$/i.test(s.trim());
 
 /** Every tag in the book, lower-cased so "Soup" and "soup" are one pill. */
 export function tagsOf(recipes: Recipe[]): string[] {

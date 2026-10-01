@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Alert, Modal, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { Alert, Linking, Modal, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useQueryClient } from '@tanstack/react-query';
@@ -10,7 +10,7 @@ import { RecipeChat } from '@/components/RecipeChat';
 import { api, errorMessage } from '@/lib/api';
 import { UNIT_LABEL, unitsFor } from '@/lib/format';
 import { keys, useIngredients, useStores } from '@/lib/hooks';
-import { blankDraft, draftFrom, draftToBody, type LineDraft } from '@/lib/recipes';
+import { blankDraft, draftFrom, draftToBody, isUrl, type LineDraft } from '@/lib/recipes';
 import { C, F } from '@/lib/theme';
 import type { Ingredient, Recipe } from '@/lib/types';
 
@@ -32,7 +32,24 @@ function StepsCard({ title, hint, placeholder, steps, onChange }: { title: strin
           </View>
           <Pressable accessibilityLabel={`remove ${label} step`} hitSlop={8} onPress={() => onChange(steps.filter((_, j) => j !== i))}><Ionicons name="close" size={16} color="#c0b7ab" /></Pressable>
         </View>))}
-      <Pressable onPress={() => onChange([...steps, ''])} style={s.addRow}><Ionicons name="add" size={16} color={C.faint} /><Body size={14} color={C.faint}>Add a {label} step</Body></Pressable>
+      <Pressable onPress={() => onChange([...steps, ''])} style={s.addRow}><Ionicons name="add" size={16} color={C.faint} /><Body size={14} color={C.faint}>Add {/^[aeiou]/.test(label) ? 'an' : 'a'} {label} step</Body></Pressable>
+    </View>
+  );
+}
+
+/** Where the recipe came from — a link or a plain note — kept for reference, never read by the planner. */
+function SourcesCard({ sources, onChange }: { sources: string[]; onChange: (s: string[]) => void }) {
+  return (
+    <View style={s.card}>
+      <View style={s.cardHead}><Serif size={19} style={{ flex: 1 }}>Sources</Serif><Mono size={12} color={C.faint}>{sources.filter((x) => x.trim()).length}</Mono></View>
+      <Body size={12.5} color={C.faint} style={{ fontFamily: F.serif, fontStyle: 'italic', paddingHorizontal: 16, paddingBottom: 6 }}>Where this came from — a video, a blog, a book, someone's notebook. For reference only.</Body>
+      {sources.map((src, i) => (
+        <View key={i} style={[s.stepRow, { alignItems: 'center' }]}>
+          <TextInput accessibilityLabel={`source ${i + 1}`} autoCapitalize="none" autoCorrect={false} value={src} placeholder="https://… or Mom's notebook" placeholderTextColor="#c0b7ab" onChangeText={(t) => onChange(sources.map((x, j) => (j === i ? t : x)))} style={[inputStyle, { flex: 1 }]} />
+          {isUrl(src) && <Pressable accessibilityLabel={`open source ${i + 1}`} hitSlop={8} onPress={() => Linking.openURL(src.trim())}><Ionicons name="open-outline" size={18} color={C.accentInk} /></Pressable>}
+          <Pressable accessibilityLabel="remove source" hitSlop={8} onPress={() => onChange(sources.filter((_, j) => j !== i))}><Ionicons name="close" size={16} color="#c0b7ab" /></Pressable>
+        </View>))}
+      <Pressable onPress={() => onChange([...sources, ''])} style={s.addRow}><Ionicons name="add" size={16} color={C.faint} /><Body size={14} color={C.faint}>Add a source</Body></Pressable>
     </View>
   );
 }
@@ -116,6 +133,7 @@ export function RecipeEditor({ recipe, onClose }: { recipe: Recipe | null; onClo
 
           <StepsCard title="Morning" hint="Hours ahead — soak, thaw, set the curd. Leave empty if there is nothing." placeholder="Soak the chana." steps={draft.morningSteps} onChange={(morningSteps) => setDraft((d) => ({ ...d, morningSteps }))} />
           <StepsCard title="Evening" hint="The cooking itself." placeholder="Boil the potatoes until soft." steps={draft.steps} onChange={(steps) => setDraft((d) => ({ ...d, steps }))} />
+          <SourcesCard sources={draft.sources} onChange={(sources) => setDraft((d) => ({ ...d, sources }))} />
 
           {error && <View style={s.err}><Body color={C.red}>{error}</Body></View>}
           <View style={{ flexDirection: 'row', gap: 10, paddingHorizontal: 16 }}>
